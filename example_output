@@ -1,0 +1,289 @@
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateLoanScheme {
+  min_col_ratio: u64,
+  interest_rate: Decimal,
+  id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateLoanScheme {
+  min_col_ratio: u64,
+  interest_rate: Decimal,
+  id: String,
+  activate_after_block: Option<u64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DestroyLoanScheme {
+  id: String,
+  activate_after_block: Option<u64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LoanSchemeResult {
+  id: String,
+  mincolratio: Decimal,
+  interestrate: Decimal,
+  default: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetCollateralToken {
+  token: String,
+  factor: Decimal,
+  fixed_interval_price_id: String,
+  activate_after_block: Option<u64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetLoanSchemeResult {
+  id: String,
+  interestrate: Decimal,
+  mincolratio: Decimal,
+  default: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ListCollateralTokens {
+  height: Option<u64>,
+  all: Option<bool>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CollateralTokenDetail {
+  token: String,
+  factor: Decimal,
+  fixed_interval_price_id: String,
+  activate_after_block: Decimal,
+  token_id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetLoanToken {
+  symbol: String,
+  name: Option<String>,
+  fixed_interval_price_id: String,
+  mintable: Option<bool>,
+  interest: Option<Decimal>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LoanConfig {
+  fixed_interval_blocks: Decimal,
+  max_price_deviation_pct: Decimal,
+  min_oracles_per_price: Decimal,
+  scheme: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LoanSummary {
+  collateral_tokens: Decimal,
+  collateral_value: Decimal,
+  loan_tokens: Decimal,
+  loan_value: Decimal,
+  open_auctions: Decimal,
+  open_vaults: Decimal,
+  schemes: Decimal,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetLoanInfoResult {
+  current_price_block: Decimal,
+  next_price_block: Decimal,
+  defaults: LoanConfig,
+  totals: LoanSummary,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateLoanToken {
+  symbol: Option<String>,
+  name: Option<String>,
+  fixed_interval_price_id: Option<String>,
+  mintable: Option<bool>,
+  interest: Option<Decimal>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Interest {
+  token: String,
+  realized_interest_per_block: Decimal,
+  total_interest: Decimal,
+  interest_per_block: Decimal,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateVault {
+  owner_address: String,
+  loan_scheme_id: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateVault {
+  owner_address: Option<String>,
+  loan_scheme_id: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Vault {
+  vault_id: String,
+  loan_scheme_id: String,
+  owner_address: String,
+  state: VaultState,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VaultActive {
+  collateral_amounts: Vec<String>,
+  loan_amounts: Vec<String>,
+  interest_amounts: Vec<String>,
+  collateral_value: Decimal,
+  loan_value: Decimal,
+  interest_value: Decimal,
+  collateral_ratio: u64,
+  informative_ratio: Decimal,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VaultLiquidation {
+  liquidation_height: u64,
+  liquidation_penalty: u64,
+  batch_count: u64,
+  batches: Vec<VaultLiquidationBatch>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UTXO {
+  txid: String,
+  vout: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DepositVault {
+  vault_id: String,
+  from: String,
+  amount: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WithdrawVault {
+  vault_id: String,
+  to: String,
+  amount: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PaybackLoanMetadataV2 {
+  vault_id: String,
+  from: String,
+  loans: Vec<TokenPaybackAmount>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VaultPagination {
+  start: Option<String>,
+  including_start: Option<bool>,
+  limit: Option<u64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ListVaultOptions {
+  owner_address: Option<String>,
+  loan_scheme_id: Option<String>,
+  state: Option<VaultState>,
+  verbose: Option<bool>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CloseVault {
+  vault_id: String,
+  to: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlaceAuctionBid {
+  vault_id: String,
+  index: u64,
+  from: String,
+  amount: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AuctionPagination {
+  start: Option<AuctionPaginationStart>,
+  including_start: Option<bool>,
+  limit: Option<u64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AuctionPaginationStart {
+  vault_id: Option<String>,
+  height: Option<u64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VaultLiquidationBatch {
+  index: u64,
+  collaterals: Vec<String>,
+  loan: String,
+  highest_bid: Option<HighestBid>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HighestBid {
+  amount: String,
+  owner: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ListAuctionHistoryPagination {
+  max_block_height: Option<u64>,
+  vault_id: Option<String>,
+  index: Option<u64>,
+  limit: Option<u64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ListAuctionHistoryDetail {
+  winner: String,
+  block_height: u64,
+  block_hash: String,
+  block_time: u64,
+  vault_id: String,
+  batch_index: u64,
+  auction_bid: String,
+  auction_won: Vec<String>,
+}
+
