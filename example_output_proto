@@ -1,0 +1,223 @@
+message CreateLoanScheme {
+  required min_col_ratio int64 = 0;
+  required interest_rate int64 = 1;
+  required id string = 2;
+}
+
+message UpdateLoanScheme {
+  required min_col_ratio int64 = 0;
+  required interest_rate int64 = 1;
+  required id string = 2;
+  option activate_after_block int64 = 3;
+}
+
+message DestroyLoanScheme {
+  required id string = 0;
+  option activate_after_block int64 = 1;
+}
+
+message LoanSchemeResult {
+  required id string = 0;
+  required mincolratio int64 = 1;
+  required interestrate int64 = 2;
+  required default bool = 3;
+}
+
+message SetCollateralToken {
+  required token string = 0;
+  required factor int64 = 1;
+  required fixed_interval_price_id string = 2;
+  option activate_after_block int64 = 3;
+}
+
+message GetLoanSchemeResult {
+  required id string = 0;
+  required interestrate int64 = 1;
+  required mincolratio int64 = 2;
+  required default bool = 3;
+}
+
+message ListCollateralTokens {
+  option height int64 = 0;
+  option all bool = 1;
+}
+
+message CollateralTokenDetail {
+  required token string = 0;
+  required factor int64 = 1;
+  required fixed_interval_price_id string = 2;
+  required activate_after_block int64 = 3;
+  required token_id string = 4;
+}
+
+message SetLoanToken {
+  required symbol string = 0;
+  option name string = 1;
+  required fixed_interval_price_id string = 2;
+  option mintable bool = 3;
+  option interest int64 = 4;
+}
+
+message LoanConfig {
+  required fixed_interval_blocks int64 = 0;
+  required max_price_deviation_pct int64 = 1;
+  required min_oracles_per_price int64 = 2;
+  required scheme string = 3;
+}
+
+message LoanSummary {
+  required collateral_tokens int64 = 0;
+  required collateral_value int64 = 1;
+  required loan_tokens int64 = 2;
+  required loan_value int64 = 3;
+  required open_auctions int64 = 4;
+  required open_vaults int64 = 5;
+  required schemes int64 = 6;
+}
+
+message GetLoanInfoResult {
+  required current_price_block int64 = 0;
+  required next_price_block int64 = 1;
+  required defaults LoanConfig = 2;
+  required totals LoanSummary = 3;
+}
+
+message UpdateLoanToken {
+  option symbol string = 0;
+  option name string = 1;
+  option fixed_interval_price_id string = 2;
+  option mintable bool = 3;
+  option interest int64 = 4;
+}
+
+message Interest {
+  required token string = 0;
+  required realized_interest_per_block int64 = 1;
+  required total_interest int64 = 2;
+  required interest_per_block int64 = 3;
+}
+
+message CreateVault {
+  required owner_address string = 0;
+  option loan_scheme_id string = 1;
+}
+
+message UpdateVault {
+  option owner_address string = 0;
+  option loan_scheme_id string = 1;
+}
+
+message Vault {
+  required vault_id string = 0;
+  required loan_scheme_id string = 1;
+  required owner_address string = 2;
+  required state VaultState = 3;
+}
+
+message VaultActive {
+  required collateral_amounts repeated string = 0;
+  required loan_amounts repeated string = 1;
+  required interest_amounts repeated string = 2;
+  required collateral_value int64 = 3;
+  required loan_value int64 = 4;
+  required interest_value int64 = 5;
+  required collateral_ratio int64 = 6;
+  required informative_ratio int64 = 7;
+}
+
+message VaultLiquidation {
+  required liquidation_height int64 = 0;
+  required liquidation_penalty int64 = 1;
+  required batch_count int64 = 2;
+  required batches repeated VaultLiquidationBatch = 3;
+}
+
+message UTXO {
+  required txid string = 0;
+  required vout int64 = 1;
+}
+
+message DepositVault {
+  required vault_id string = 0;
+  required from string = 1;
+  required amount string = 2;
+}
+
+message WithdrawVault {
+  required vault_id string = 0;
+  required to string = 1;
+  required amount string = 2;
+}
+
+message PaybackLoanMetadataV2 {
+  required vault_id string = 0;
+  required from string = 1;
+  required loans repeated TokenPaybackAmount = 2;
+}
+
+message VaultPagination {
+  option start string = 0;
+  option including_start bool = 1;
+  option limit int64 = 2;
+}
+
+message ListVaultOptions {
+  option owner_address string = 0;
+  option loan_scheme_id string = 1;
+  option state VaultState = 2;
+  option verbose bool = 3;
+}
+
+message CloseVault {
+  required vault_id string = 0;
+  required to string = 1;
+}
+
+message PlaceAuctionBid {
+  required vault_id string = 0;
+  required index int64 = 1;
+  required from string = 2;
+  required amount string = 3;
+}
+
+message AuctionPagination {
+  option start AuctionPaginationStart = 0;
+  option including_start bool = 1;
+  option limit int64 = 2;
+}
+
+message AuctionPaginationStart {
+  option vault_id string = 0;
+  option height int64 = 1;
+}
+
+message VaultLiquidationBatch {
+  required index int64 = 0;
+  required collaterals repeated string = 1;
+  required loan string = 2;
+  option highest_bid HighestBid = 3;
+}
+
+message HighestBid {
+  required amount string = 0;
+  required owner string = 1;
+}
+
+message ListAuctionHistoryPagination {
+  option max_block_height int64 = 0;
+  option vault_id string = 1;
+  option index int64 = 2;
+  option limit int64 = 3;
+}
+
+message ListAuctionHistoryDetail {
+  required winner string = 0;
+  required block_height int64 = 1;
+  required block_hash string = 2;
+  required block_time int64 = 3;
+  required vault_id string = 4;
+  required batch_index int64 = 5;
+  required auction_bid string = 6;
+  required auction_won repeated string = 7;
+}
+
