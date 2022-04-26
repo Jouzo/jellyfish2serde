@@ -3,17 +3,11 @@ use std::fmt::Display;
 extern crate swc_ecma_parser;
 
 use swc_ecma_ast::{
-    BindingIdent, Expr, TsArrayType, TsEntityName, TsFnParam, TsIndexSignature, TsInterfaceDecl,
-    TsKeywordType, TsPropertySignature, TsType, TsTypeAnn, TsTypeElement, TsTypeParamDecl,
-    TsTypeRef,
+    BindingIdent, Expr, TsFnParam, TsIndexSignature, TsInterfaceDecl, TsPropertySignature, TsType,
+    TsTypeAnn, TsTypeElement, TsTypeParamDecl,
 };
 
-use crate::utils::{map_type_proto, map_type_rust, Param};
-
-pub enum ConversionType {
-    Rust,
-    Protobuf,
-}
+use crate::utils::{ConversionType, Param};
 
 struct Interface {
     name: String,
@@ -42,7 +36,7 @@ impl Interface {
 
     fn fmt_proto(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = if !self.generics.is_empty() {
-            format!("{}<{}>", self.name, self.generics.join(", "))
+            format!("{}<{}>", self.name, self.generics.join(" "))
         } else {
             self.name.clone()
         };
@@ -89,51 +83,8 @@ impl Display for MapInterface {
     }
 }
 
-fn type_ann_to_string(type_ann: TsType, conversion_type: &ConversionType) -> String {
-    let map_type = match conversion_type {
-        ConversionType::Protobuf => map_type_proto,
-        ConversionType::Rust => map_type_rust,
-    };
-    match type_ann {
-        TsType::TsTypeRef(TsTypeRef {
-            type_name: TsEntityName::Ident(ident),
-            ..
-        }) =>
-        // Replace BigNumber by rust_decimal
-        {
-            if ident.sym.to_string() == "BigNumber" {
-                String::from("Decimal")
-            } else {
-                ident.sym.to_string()
-            }
-        }
-        TsType::TsKeywordType(keyword) => map_type(keyword.kind),
-        TsType::TsArrayType(TsArrayType {
-            elem_type: box TsType::TsKeywordType(TsKeywordType { kind, .. }),
-            ..
-        }) => format!("Vec<{}>", map_type(kind)),
-        TsType::TsArrayType(TsArrayType {
-            elem_type:
-                box TsType::TsTypeRef(TsTypeRef {
-                    type_name: TsEntityName::Ident(ident),
-                    ..
-                }),
-            ..
-        }) => format!("Vec<{}>", ident.sym),
-        _ => {
-            // println!("type_ann : {:#?}", type_ann);
-            // panic!("UNINPLEMENTED TSTYPE FOR PROPERTY INTERFACE")
-            format!("UNINPLEMENTED TSTYPE FOR PROPERTY INTERFACE")
-        }
-    }
-}
-
 pub fn handle_interface(interface: TsInterfaceDecl, conversion_type: ConversionType) {
     let mut generics: Vec<String> = Vec::new();
-    let map_type = match conversion_type {
-        ConversionType::Protobuf => map_type_proto,
-        ConversionType::Rust => map_type_rust,
-    };
 
     if let Some(TsTypeParamDecl { params, .. }) = &interface.type_params {
         for param in params {
@@ -151,8 +102,9 @@ pub fn handle_interface(interface: TsInterfaceDecl, conversion_type: ConversionT
                 ..
             }) => properties.push(Param {
                 key: id.sym.to_string(),
-                val: type_ann_to_string(type_ann, &conversion_type),
+                val: conversion_type.map_ts_types(type_ann),
                 optional,
+                conversion_type: conversion_type.get(),
             }),
             // Handle conversion for hashmap type such as
             // ```
@@ -183,8 +135,8 @@ pub fn handle_interface(interface: TsInterfaceDecl, conversion_type: ConversionT
                         MapInterface {
                             generics,
                             name: interface.id.sym.to_string(),
-                            key: map_type(keyword.kind),
-                            val: type_ann_to_string(type_ann, &conversion_type)
+                            key: conversion_type.map_type()(keyword.kind),
+                            val: conversion_type.map_ts_types(type_ann)
                         }
                     );
                 }

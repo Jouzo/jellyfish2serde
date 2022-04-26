@@ -7,7 +7,8 @@ mod utils;
 
 use class::handle_class;
 use enums::handle_enum;
-use interface::{handle_interface, ConversionType};
+use interface::handle_interface;
+use utils::ConversionType;
 
 use std::path::Path;
 
@@ -23,9 +24,9 @@ use swc_ecma_ast::{ClassDecl, Decl, ModuleItem};
 
 use swc_ecma_parser::{lexer::Lexer, Parser, StringInput, Syntax};
 
-fn transpile(body: Vec<ModuleItem>, conversion_type: ConversionType) {
+fn transpile(body: Vec<ModuleItem>, con_type: ConversionType) {
     for item in body {
-        let conversion_type = match conversion_type {
+        let conversion_type = match con_type {
             ConversionType::Rust => ConversionType::Rust,
             ConversionType::Protobuf => ConversionType::Protobuf,
         };
@@ -35,7 +36,7 @@ fn transpile(body: Vec<ModuleItem>, conversion_type: ConversionType) {
                     handle_interface(interface, conversion_type);
                 }
                 Decl::Class(ClassDecl { class, .. }) => {
-                    handle_class(class);
+                    handle_class(class, conversion_type);
                 }
                 Decl::TsEnum(_enum) => {
                     handle_enum(_enum);

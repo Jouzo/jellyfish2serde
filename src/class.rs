@@ -6,7 +6,7 @@ use swc_ecma_ast::{
     TsArrayType, TsEntityName, TsType, TsTypeAnn, TsTypeParamInstantiation, TsTypeRef,
 };
 
-use crate::utils::{map_type_rust, Param};
+use crate::utils::{map_type_rust, ConversionType, Param};
 
 fn get_cmd_args(args: Vec<ExprOrSpread>) -> (Option<String>, Vec<String>) {
     let mut it = args.into_iter();
@@ -53,7 +53,7 @@ fn get_cmd_args(args: Vec<ExprOrSpread>) -> (Option<String>, Vec<String>) {
     (cmd, args)
 }
 
-pub fn handle_class(class: Class) {
+pub fn handle_class(class: Class, conversion_type: ConversionType) {
     for member in class.body {
         let mut fn_name: Option<String> = None;
         let mut fn_params: Vec<Param> = Vec::new();
@@ -86,6 +86,7 @@ pub fn handle_class(class: Class) {
                                 key: id.sym.to_string(),
                                 val: ident.sym.to_string(),
                                 optional: id.optional,
+                                conversion_type: conversion_type.get(),
                             });
                         }
                         TsType::TsKeywordType(keyword) => {
@@ -93,6 +94,7 @@ pub fn handle_class(class: Class) {
                                 key: id.sym.to_string(),
                                 val: map_type_rust(keyword.kind),
                                 optional: id.optional,
+                                conversion_type: conversion_type.get(),
                             });
                         }
                         _ => (),
@@ -120,6 +122,7 @@ pub fn handle_class(class: Class) {
                                     key: id.sym.to_string(),
                                     val: ident.sym.to_string(),
                                     optional: true,
+                                    conversion_type: conversion_type.get(),
                                 });
                                 // fn_has_utxo = true;
                             }
