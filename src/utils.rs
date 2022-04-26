@@ -2,10 +2,18 @@ use convert_case::{Case, Casing};
 use std::fmt::Display;
 use swc_ecma_ast::TsKeywordTypeKind;
 
-pub fn map_type(kind: TsKeywordTypeKind) -> String {
+pub fn map_type_rust(kind: TsKeywordTypeKind) -> String {
     match kind {
         TsKeywordTypeKind::TsStringKeyword => String::from("String"),
         TsKeywordTypeKind::TsNumberKeyword => String::from("u64"),
+        TsKeywordTypeKind::TsBooleanKeyword => String::from("bool"),
+        _ => panic!("MISSING KIND"),
+    }
+}
+pub fn map_type_proto(kind: TsKeywordTypeKind) -> String {
+    match kind {
+        TsKeywordTypeKind::TsStringKeyword => String::from("string"),
+        TsKeywordTypeKind::TsNumberKeyword => String::from("int64"),
         TsKeywordTypeKind::TsBooleanKeyword => String::from("bool"),
         _ => panic!("MISSING KIND"),
     }

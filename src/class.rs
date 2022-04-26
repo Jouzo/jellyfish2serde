@@ -6,7 +6,7 @@ use swc_ecma_ast::{
     TsArrayType, TsEntityName, TsType, TsTypeAnn, TsTypeParamInstantiation, TsTypeRef,
 };
 
-use crate::utils::{map_type, Param};
+use crate::utils::{map_type_rust, Param};
 
 fn get_cmd_args(args: Vec<ExprOrSpread>) -> (Option<String>, Vec<String>) {
     let mut it = args.into_iter();
@@ -91,7 +91,7 @@ pub fn handle_class(class: Class) {
                         TsType::TsKeywordType(keyword) => {
                             fn_params.push(Param {
                                 key: id.sym.to_string(),
-                                val: map_type(keyword.kind),
+                                val: map_type_rust(keyword.kind),
                                 optional: id.optional,
                             });
                         }
@@ -170,7 +170,7 @@ pub fn handle_class(class: Class) {
                 {
                     match params.get(0) {
                         Some(box TsType::TsKeywordType(keyword)) => {
-                            fn_return_type = Some(map_type(keyword.kind));
+                            fn_return_type = Some(map_type_rust(keyword.kind));
                         }
                         Some(box TsType::TsArrayType(TsArrayType {
                             elem_type:
