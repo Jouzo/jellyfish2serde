@@ -60,6 +60,7 @@ impl Display for Interface {
 }
 
 struct MapInterface {
+    prefix: String,
     name: String,
     generics: Vec<String>,
     key: String,
@@ -94,54 +95,27 @@ pub fn handle_interface(interface: TsInterfaceDecl, conversion_type: ConversionT
 
     let mut properties: Vec<Param> = Vec::new();
     for property in interface.body.body {
-        match property {
-            TsTypeElement::TsPropertySignature(TsPropertySignature {
-                key: box Expr::Ident(id),
-                type_ann: Some(TsTypeAnn { box type_ann, .. }),
-                optional,
-                ..
-            }) => properties.push(Param {
-                key: id.sym.to_string(),
-                val: conversion_type.map_ts_types(type_ann),
+        let (prefix, key, value, optional, map_interface) =
+            conversion_type.extract_key_value_from_ts_type_element(property);
+        if map_interface {
+            println!(
+                "{}",
+                MapInterface {
+                    prefix,
+                    generics: generics.clone(),
+                    name: interface.id.sym.to_string(),
+                    key: key,
+                    val: value
+                }
+            );
+        } else {
+            properties.push(Param {
+                prefix,
+                key,
+                val: value,
                 optional,
                 conversion_type: conversion_type.get(),
-            }),
-            // Handle conversion for hashmap type such as
-            // ```
-            // export interface MasternodeResult<T> {
-            //     [id: string]: T
-            // }
-            // ```
-            // to
-            // ```
-            // pub struct MasternodeResult<T>(HashMap<String, T>);
-            // ```
-            TsTypeElement::TsIndexSignature(TsIndexSignature {
-                params,
-                type_ann: Some(TsTypeAnn { box type_ann, .. }),
-                ..
-            }) => {
-                if let Some(TsFnParam::Ident(BindingIdent {
-                    type_ann:
-                        Some(TsTypeAnn {
-                            type_ann: box TsType::TsKeywordType(keyword),
-                            ..
-                        }),
-                    ..
-                })) = params.get(0)
-                {
-                    return println!(
-                        "{}",
-                        MapInterface {
-                            generics,
-                            name: interface.id.sym.to_string(),
-                            key: conversion_type.map_type()(keyword.kind),
-                            val: conversion_type.map_ts_types(type_ann)
-                        }
-                    );
-                }
-            }
-            _ => (),
+            })
         }
     }
 

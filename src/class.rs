@@ -6,7 +6,7 @@ use swc_ecma_ast::{
     TsArrayType, TsEntityName, TsType, TsTypeAnn, TsTypeParamInstantiation, TsTypeRef,
 };
 
-use crate::utils::{map_type_rust, ConversionType, Param};
+use crate::utils::{ConversionType, Param};
 
 fn get_cmd_args(args: Vec<ExprOrSpread>) -> (Option<String>, Vec<String>) {
     let mut it = args.into_iter();
@@ -83,6 +83,7 @@ pub fn handle_class(class: Class, conversion_type: ConversionType) {
                             ..
                         }) => {
                             fn_params.push(Param {
+                                prefix: String::from(""),
                                 key: id.sym.to_string(),
                                 val: ident.sym.to_string(),
                                 optional: id.optional,
@@ -91,8 +92,9 @@ pub fn handle_class(class: Class, conversion_type: ConversionType) {
                         }
                         TsType::TsKeywordType(keyword) => {
                             fn_params.push(Param {
+                                prefix: String::from(""),
                                 key: id.sym.to_string(),
-                                val: map_type_rust(keyword.kind),
+                                val: ConversionType::Rust.map_type()(keyword.kind),
                                 optional: id.optional,
                                 conversion_type: conversion_type.get(),
                             });
@@ -119,6 +121,7 @@ pub fn handle_class(class: Class, conversion_type: ConversionType) {
                                 ..
                             }) => {
                                 fn_params.push(Param {
+                                    prefix: String::from(""),
                                     key: id.sym.to_string(),
                                     val: ident.sym.to_string(),
                                     optional: true,
@@ -173,7 +176,7 @@ pub fn handle_class(class: Class, conversion_type: ConversionType) {
                 {
                     match params.get(0) {
                         Some(box TsType::TsKeywordType(keyword)) => {
-                            fn_return_type = Some(map_type_rust(keyword.kind));
+                            fn_return_type = Some(ConversionType::Rust.map_type()(keyword.kind));
                         }
                         Some(box TsType::TsArrayType(TsArrayType {
                             elem_type:
