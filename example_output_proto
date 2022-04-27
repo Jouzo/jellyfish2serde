@@ -1,0 +1,223 @@
+message CreateLoanScheme {
+   int64 min_col_ratio = 0;
+   int64 interest_rate = 1;
+   string id = 2;
+}
+
+message UpdateLoanScheme {
+   int64 min_col_ratio = 0;
+   int64 interest_rate = 1;
+   string id = 2;
+   int64 activate_after_block = 3;
+}
+
+message DestroyLoanScheme {
+   string id = 0;
+   int64 activate_after_block = 1;
+}
+
+message LoanSchemeResult {
+   string id = 0;
+   int64 mincolratio = 1;
+   int64 interestrate = 2;
+   bool default = 3;
+}
+
+message SetCollateralToken {
+   string token = 0;
+   int64 factor = 1;
+   string fixed_interval_price_id = 2;
+   int64 activate_after_block = 3;
+}
+
+message GetLoanSchemeResult {
+   string id = 0;
+   int64 interestrate = 1;
+   int64 mincolratio = 2;
+   bool default = 3;
+}
+
+message ListCollateralTokens {
+   int64 height = 0;
+   bool all = 1;
+}
+
+message CollateralTokenDetail {
+   string token = 0;
+   int64 factor = 1;
+   string fixed_interval_price_id = 2;
+   int64 activate_after_block = 3;
+   string token_id = 4;
+}
+
+message SetLoanToken {
+   string symbol = 0;
+   string name = 1;
+   string fixed_interval_price_id = 2;
+   bool mintable = 3;
+   int64 interest = 4;
+}
+
+message LoanConfig {
+   int64 fixed_interval_blocks = 0;
+   int64 max_price_deviation_pct = 1;
+   int64 min_oracles_per_price = 2;
+   string scheme = 3;
+}
+
+message LoanSummary {
+   int64 collateral_tokens = 0;
+   int64 collateral_value = 1;
+   int64 loan_tokens = 2;
+   int64 loan_value = 3;
+   int64 open_auctions = 4;
+   int64 open_vaults = 5;
+   int64 schemes = 6;
+}
+
+message GetLoanInfoResult {
+   int64 current_price_block = 0;
+   int64 next_price_block = 1;
+   LoanConfig defaults = 2;
+   LoanSummary totals = 3;
+}
+
+message UpdateLoanToken {
+   string symbol = 0;
+   string name = 1;
+   string fixed_interval_price_id = 2;
+   bool mintable = 3;
+   int64 interest = 4;
+}
+
+message Interest {
+   string token = 0;
+   int64 realized_interest_per_block = 1;
+   int64 total_interest = 2;
+   int64 interest_per_block = 3;
+}
+
+message CreateVault {
+   string owner_address = 0;
+   string loan_scheme_id = 1;
+}
+
+message UpdateVault {
+   string owner_address = 0;
+   string loan_scheme_id = 1;
+}
+
+message Vault {
+   string vault_id = 0;
+   string loan_scheme_id = 1;
+   string owner_address = 2;
+   VaultState state = 3;
+}
+
+message VaultActive {
+  repeated string collateral_amounts = 0;
+  repeated string loan_amounts = 1;
+  repeated string interest_amounts = 2;
+   int64 collateral_value = 3;
+   int64 loan_value = 4;
+   int64 interest_value = 5;
+   int64 collateral_ratio = 6;
+   int64 informative_ratio = 7;
+}
+
+message VaultLiquidation {
+   int64 liquidation_height = 0;
+   int64 liquidation_penalty = 1;
+   int64 batch_count = 2;
+  repeated VaultLiquidationBatch batches = 3;
+}
+
+message UTXO {
+   string txid = 0;
+   int64 vout = 1;
+}
+
+message DepositVault {
+   string vault_id = 0;
+   string from = 1;
+   string amount = 2;
+}
+
+message WithdrawVault {
+   string vault_id = 0;
+   string to = 1;
+   string amount = 2;
+}
+
+message PaybackLoanMetadataV2 {
+   string vault_id = 0;
+   string from = 1;
+  repeated TokenPaybackAmount loans = 2;
+}
+
+message VaultPagination {
+   string start = 0;
+   bool including_start = 1;
+   int64 limit = 2;
+}
+
+message ListVaultOptions {
+   string owner_address = 0;
+   string loan_scheme_id = 1;
+   VaultState state = 2;
+   bool verbose = 3;
+}
+
+message CloseVault {
+   string vault_id = 0;
+   string to = 1;
+}
+
+message PlaceAuctionBid {
+   string vault_id = 0;
+   int64 index = 1;
+   string from = 2;
+   string amount = 3;
+}
+
+message AuctionPagination {
+   AuctionPaginationStart start = 0;
+   bool including_start = 1;
+   int64 limit = 2;
+}
+
+message AuctionPaginationStart {
+   string vault_id = 0;
+   int64 height = 1;
+}
+
+message VaultLiquidationBatch {
+   int64 index = 0;
+  repeated string collaterals = 1;
+   string loan = 2;
+   HighestBid highest_bid = 3;
+}
+
+message HighestBid {
+   string amount = 0;
+   string owner = 1;
+}
+
+message ListAuctionHistoryPagination {
+   int64 max_block_height = 0;
+   string vault_id = 1;
+   int64 index = 2;
+   int64 limit = 3;
+}
+
+message ListAuctionHistoryDetail {
+   string winner = 0;
+   int64 block_height = 1;
+   string block_hash = 2;
+   int64 block_time = 3;
+   string vault_id = 4;
+   int64 batch_index = 5;
+   string auction_bid = 6;
+  repeated string auction_won = 7;
+}
+

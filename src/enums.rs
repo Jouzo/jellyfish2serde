@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use convert_case::{Case, Casing};
 use swc_ecma_ast::{TsEnumDecl, TsEnumMember, TsEnumMemberId};
 

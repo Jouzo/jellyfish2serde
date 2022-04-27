@@ -6,7 +6,7 @@ use swc_ecma_ast::{
     TsArrayType, TsEntityName, TsType, TsTypeAnn, TsTypeParamInstantiation, TsTypeRef,
 };
 
-use crate::utils::{map_type, Param};
+use crate::utils::{ConversionType, Param};
 
 fn get_cmd_args(args: Vec<ExprOrSpread>) -> (Option<String>, Vec<String>) {
     let mut it = args.into_iter();
@@ -53,7 +53,7 @@ fn get_cmd_args(args: Vec<ExprOrSpread>) -> (Option<String>, Vec<String>) {
     (cmd, args)
 }
 
-pub fn handle_class(class: Class) {
+pub fn handle_class(class: Class, conversion_type: ConversionType) {
     for member in class.body {
         let mut fn_name: Option<String> = None;
         let mut fn_params: Vec<Param> = Vec::new();
@@ -83,16 +83,20 @@ pub fn handle_class(class: Class) {
                             ..
                         }) => {
                             fn_params.push(Param {
+                                prefix: String::from(""),
                                 key: id.sym.to_string(),
                                 val: ident.sym.to_string(),
                                 optional: id.optional,
+                                conversion_type: conversion_type.get(),
                             });
                         }
                         TsType::TsKeywordType(keyword) => {
                             fn_params.push(Param {
+                                prefix: String::from(""),
                                 key: id.sym.to_string(),
-                                val: map_type(keyword.kind),
+                                val: ConversionType::Rust.map_type()(keyword.kind),
                                 optional: id.optional,
+                                conversion_type: conversion_type.get(),
                             });
                         }
                         _ => (),
@@ -117,9 +121,11 @@ pub fn handle_class(class: Class) {
                                 ..
                             }) => {
                                 fn_params.push(Param {
+                                    prefix: String::from(""),
                                     key: id.sym.to_string(),
                                     val: ident.sym.to_string(),
                                     optional: true,
+                                    conversion_type: conversion_type.get(),
                                 });
                                 // fn_has_utxo = true;
                             }
@@ -170,7 +176,7 @@ pub fn handle_class(class: Class) {
                 {
                     match params.get(0) {
                         Some(box TsType::TsKeywordType(keyword)) => {
-                            fn_return_type = Some(map_type(keyword.kind));
+                            fn_return_type = Some(ConversionType::Rust.map_type()(keyword.kind));
                         }
                         Some(box TsType::TsArrayType(TsArrayType {
                             elem_type:
