@@ -1,9 +1,8 @@
 use convert_case::{Case, Casing};
 use std::fmt::Display;
 use swc_ecma_ast::{
-    BindingIdent, Expr, TsArrayType, TsEntityName, TsFnParam, TsIndexSignature, TsInterfaceDecl,
-    TsKeywordType, TsKeywordTypeKind, TsPropertySignature, TsType, TsTypeAnn, TsTypeElement,
-    TsTypeParamDecl, TsTypeRef,
+    BindingIdent, Expr, TsArrayType, TsEntityName, TsFnParam, TsIndexSignature, TsKeywordType,
+    TsKeywordTypeKind, TsPropertySignature, TsType, TsTypeAnn, TsTypeElement, TsTypeRef,
 };
 
 pub enum ConversionType {

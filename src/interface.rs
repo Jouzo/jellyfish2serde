@@ -2,10 +2,7 @@ use std::fmt::Display;
 
 extern crate swc_ecma_parser;
 
-use swc_ecma_ast::{
-    BindingIdent, Expr, TsFnParam, TsIndexSignature, TsInterfaceDecl, TsPropertySignature, TsType,
-    TsTypeAnn, TsTypeElement, TsTypeParamDecl,
-};
+use swc_ecma_ast::{TsInterfaceDecl, TsTypeParamDecl};
 
 use crate::utils::{ConversionType, Param};
 
