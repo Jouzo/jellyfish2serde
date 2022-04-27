@@ -1,223 +1,223 @@
 message CreateLoanScheme {
-  min_col_ratio int64 = 0;
-  interest_rate int64 = 1;
-  id string = 2;
+   int64 min_col_ratio = 0;
+   int64 interest_rate = 1;
+   string id = 2;
 }
 
 message UpdateLoanScheme {
-  min_col_ratio int64 = 0;
-  interest_rate int64 = 1;
-  id string = 2;
-  activate_after_block int64 = 3;
+   int64 min_col_ratio = 0;
+   int64 interest_rate = 1;
+   string id = 2;
+   int64 activate_after_block = 3;
 }
 
 message DestroyLoanScheme {
-  id string = 0;
-  activate_after_block int64 = 1;
+   string id = 0;
+   int64 activate_after_block = 1;
 }
 
 message LoanSchemeResult {
-  id string = 0;
-  mincolratio int64 = 1;
-  interestrate int64 = 2;
-  default bool = 3;
+   string id = 0;
+   int64 mincolratio = 1;
+   int64 interestrate = 2;
+   bool default = 3;
 }
 
 message SetCollateralToken {
-  token string = 0;
-  factor int64 = 1;
-  fixed_interval_price_id string = 2;
-  activate_after_block int64 = 3;
+   string token = 0;
+   int64 factor = 1;
+   string fixed_interval_price_id = 2;
+   int64 activate_after_block = 3;
 }
 
 message GetLoanSchemeResult {
-  id string = 0;
-  interestrate int64 = 1;
-  mincolratio int64 = 2;
-  default bool = 3;
+   string id = 0;
+   int64 interestrate = 1;
+   int64 mincolratio = 2;
+   bool default = 3;
 }
 
 message ListCollateralTokens {
-  height int64 = 0;
-  all bool = 1;
+   int64 height = 0;
+   bool all = 1;
 }
 
 message CollateralTokenDetail {
-  token string = 0;
-  factor int64 = 1;
-  fixed_interval_price_id string = 2;
-  activate_after_block int64 = 3;
-  token_id string = 4;
+   string token = 0;
+   int64 factor = 1;
+   string fixed_interval_price_id = 2;
+   int64 activate_after_block = 3;
+   string token_id = 4;
 }
 
 message SetLoanToken {
-  symbol string = 0;
-  name string = 1;
-  fixed_interval_price_id string = 2;
-  mintable bool = 3;
-  interest int64 = 4;
+   string symbol = 0;
+   string name = 1;
+   string fixed_interval_price_id = 2;
+   bool mintable = 3;
+   int64 interest = 4;
 }
 
 message LoanConfig {
-  fixed_interval_blocks int64 = 0;
-  max_price_deviation_pct int64 = 1;
-  min_oracles_per_price int64 = 2;
-  scheme string = 3;
+   int64 fixed_interval_blocks = 0;
+   int64 max_price_deviation_pct = 1;
+   int64 min_oracles_per_price = 2;
+   string scheme = 3;
 }
 
 message LoanSummary {
-  collateral_tokens int64 = 0;
-  collateral_value int64 = 1;
-  loan_tokens int64 = 2;
-  loan_value int64 = 3;
-  open_auctions int64 = 4;
-  open_vaults int64 = 5;
-  schemes int64 = 6;
+   int64 collateral_tokens = 0;
+   int64 collateral_value = 1;
+   int64 loan_tokens = 2;
+   int64 loan_value = 3;
+   int64 open_auctions = 4;
+   int64 open_vaults = 5;
+   int64 schemes = 6;
 }
 
 message GetLoanInfoResult {
-  current_price_block int64 = 0;
-  next_price_block int64 = 1;
-  defaults LoanConfig = 2;
-  totals LoanSummary = 3;
+   int64 current_price_block = 0;
+   int64 next_price_block = 1;
+   LoanConfig defaults = 2;
+   LoanSummary totals = 3;
 }
 
 message UpdateLoanToken {
-  symbol string = 0;
-  name string = 1;
-  fixed_interval_price_id string = 2;
-  mintable bool = 3;
-  interest int64 = 4;
+   string symbol = 0;
+   string name = 1;
+   string fixed_interval_price_id = 2;
+   bool mintable = 3;
+   int64 interest = 4;
 }
 
 message Interest {
-  token string = 0;
-  realized_interest_per_block int64 = 1;
-  total_interest int64 = 2;
-  interest_per_block int64 = 3;
+   string token = 0;
+   int64 realized_interest_per_block = 1;
+   int64 total_interest = 2;
+   int64 interest_per_block = 3;
 }
 
 message CreateVault {
-  owner_address string = 0;
-  loan_scheme_id string = 1;
+   string owner_address = 0;
+   string loan_scheme_id = 1;
 }
 
 message UpdateVault {
-  owner_address string = 0;
-  loan_scheme_id string = 1;
+   string owner_address = 0;
+   string loan_scheme_id = 1;
 }
 
 message Vault {
-  vault_id string = 0;
-  loan_scheme_id string = 1;
-  owner_address string = 2;
-  state VaultState = 3;
+   string vault_id = 0;
+   string loan_scheme_id = 1;
+   string owner_address = 2;
+   VaultState state = 3;
 }
 
 message VaultActive {
-  collateral_amounts repeated string = 0;
-  loan_amounts repeated string = 1;
-  interest_amounts repeated string = 2;
-  collateral_value int64 = 3;
-  loan_value int64 = 4;
-  interest_value int64 = 5;
-  collateral_ratio int64 = 6;
-  informative_ratio int64 = 7;
+  repeated string collateral_amounts = 0;
+  repeated string loan_amounts = 1;
+  repeated string interest_amounts = 2;
+   int64 collateral_value = 3;
+   int64 loan_value = 4;
+   int64 interest_value = 5;
+   int64 collateral_ratio = 6;
+   int64 informative_ratio = 7;
 }
 
 message VaultLiquidation {
-  liquidation_height int64 = 0;
-  liquidation_penalty int64 = 1;
-  batch_count int64 = 2;
-  batches repeated VaultLiquidationBatch = 3;
+   int64 liquidation_height = 0;
+   int64 liquidation_penalty = 1;
+   int64 batch_count = 2;
+  repeated VaultLiquidationBatch batches = 3;
 }
 
 message UTXO {
-  txid string = 0;
-  vout int64 = 1;
+   string txid = 0;
+   int64 vout = 1;
 }
 
 message DepositVault {
-  vault_id string = 0;
-  from string = 1;
-  amount string = 2;
+   string vault_id = 0;
+   string from = 1;
+   string amount = 2;
 }
 
 message WithdrawVault {
-  vault_id string = 0;
-  to string = 1;
-  amount string = 2;
+   string vault_id = 0;
+   string to = 1;
+   string amount = 2;
 }
 
 message PaybackLoanMetadataV2 {
-  vault_id string = 0;
-  from string = 1;
-  loans repeated TokenPaybackAmount = 2;
+   string vault_id = 0;
+   string from = 1;
+  repeated TokenPaybackAmount loans = 2;
 }
 
 message VaultPagination {
-  start string = 0;
-  including_start bool = 1;
-  limit int64 = 2;
+   string start = 0;
+   bool including_start = 1;
+   int64 limit = 2;
 }
 
 message ListVaultOptions {
-  owner_address string = 0;
-  loan_scheme_id string = 1;
-  state VaultState = 2;
-  verbose bool = 3;
+   string owner_address = 0;
+   string loan_scheme_id = 1;
+   VaultState state = 2;
+   bool verbose = 3;
 }
 
 message CloseVault {
-  vault_id string = 0;
-  to string = 1;
+   string vault_id = 0;
+   string to = 1;
 }
 
 message PlaceAuctionBid {
-  vault_id string = 0;
-  index int64 = 1;
-  from string = 2;
-  amount string = 3;
+   string vault_id = 0;
+   int64 index = 1;
+   string from = 2;
+   string amount = 3;
 }
 
 message AuctionPagination {
-  start AuctionPaginationStart = 0;
-  including_start bool = 1;
-  limit int64 = 2;
+   AuctionPaginationStart start = 0;
+   bool including_start = 1;
+   int64 limit = 2;
 }
 
 message AuctionPaginationStart {
-  vault_id string = 0;
-  height int64 = 1;
+   string vault_id = 0;
+   int64 height = 1;
 }
 
 message VaultLiquidationBatch {
-  index int64 = 0;
-  collaterals repeated string = 1;
-  loan string = 2;
-  highest_bid HighestBid = 3;
+   int64 index = 0;
+  repeated string collaterals = 1;
+   string loan = 2;
+   HighestBid highest_bid = 3;
 }
 
 message HighestBid {
-  amount string = 0;
-  owner string = 1;
+   string amount = 0;
+   string owner = 1;
 }
 
 message ListAuctionHistoryPagination {
-  max_block_height int64 = 0;
-  vault_id string = 1;
-  index int64 = 2;
-  limit int64 = 3;
+   int64 max_block_height = 0;
+   string vault_id = 1;
+   int64 index = 2;
+   int64 limit = 3;
 }
 
 message ListAuctionHistoryDetail {
-  winner string = 0;
-  block_height int64 = 1;
-  block_hash string = 2;
-  block_time int64 = 3;
-  vault_id string = 4;
-  batch_index int64 = 5;
-  auction_bid string = 6;
-  auction_won repeated string = 7;
+   string winner = 0;
+   int64 block_height = 1;
+   string block_hash = 2;
+   int64 block_time = 3;
+   string vault_id = 4;
+   int64 batch_index = 5;
+   string auction_bid = 6;
+  repeated string auction_won = 7;
 }
 

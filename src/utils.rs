@@ -200,8 +200,8 @@ impl Param {
             f,
             "{} {} {}",
             self.prefix,
+            self.val.clone(),
             self.key.to_case(Case::Snake),
-            self.val.clone()
         )
     }
 }
