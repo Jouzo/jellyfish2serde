@@ -1,0 +1,5 @@
+message ArrayTypes {
+  repeated string name = 1;
+  repeated int32 ages = 2;
+  repeated bool truths = 3;
+}

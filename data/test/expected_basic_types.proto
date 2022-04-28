@@ -1,0 +1,5 @@
+message BasicTypes {
+  bool default = 1;
+  int32 minColRatio = 2;
+  string id = 3;
+}

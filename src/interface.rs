@@ -59,6 +59,7 @@ impl Display for MapInterface {
     }
 }
 
+// Handling Advanced types
 fn type_ann_to_string(type_ann: TsType) -> String {
     match type_ann {
         TsType::TsTypeRef(TsTypeRef {
