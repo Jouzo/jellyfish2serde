@@ -39,45 +39,33 @@ mod test_handle_interface {
     use std::fs;
     use swc_ecma_ast::Module;
 
-    fn load_test_data(filename: String) -> Module {
+    fn load_test_data(filename: &str) -> Module {
         generate_ast_structure(&filename.to_string())
     }
 
-    fn load_test_expected_results(filename: String) -> Result<String, std::io::Error> {
+    fn load_test_expected_results(filename: &str) -> Result<String, std::io::Error> {
         Ok(fs::read_to_string(filename)?)
     }
 
-    fn basic_types_module() -> Module {
-        let filename = "data/test/basic_types.ts";
-        load_test_data(filename.to_string())
+    macro_rules! test_proto_transpiler {
+        ($($name:ident: $value:expr,)*) => {
+            $(
+                #[test]
+                fn $name() -> Result<(), std::io::Error>{
+                    let (test_input, test_expected_result) = $value;
+                    let test_module = load_test_data(test_input);
+                    let expected_result = load_test_expected_results(test_expected_result)?;
+                    let pt = ProtoTranspiler::new(test_module);
+                    let output_code = pt.transpile().join("\n");
+                    assert_eq!(output_code, expected_result);
+                    Ok(())
+                }
+            )*
+        }
     }
-
-    fn basic_types_expected_results() -> String {
-        let filename = "data/test/expected_basic_types.proto";
-        load_test_expected_results(filename.to_string()).unwrap()
-    }
-
-    fn array_types_module() -> Module {
-        let filename = "data/test/array_type.ts";
-        load_test_data(filename.to_string())
-    }
-
-    fn array_types_expected_results() -> String {
-        let filename = "data/test/expected_array_type.proto";
-        load_test_expected_results(filename.to_string()).unwrap()
-    }
-
-    #[test]
-    fn test_handle_basic_types() {
-        let pt = ProtoTranspiler::new(basic_types_module());
-        let output_code = pt.transpile().join("\n");
-        assert_eq!(output_code, basic_types_expected_results());
-    }
-
-    #[test]
-    fn test_handle_array_types() {
-        let pt = ProtoTranspiler::new(array_types_module());
-        let output_code = pt.transpile().join("\n");
-        assert_eq!(output_code, array_types_expected_results());
+    test_proto_transpiler! {
+        test_handle_basic_types: ("data/test/basic_types.ts", "data/test/expected_basic_types.proto"),
+        test_handle_array_types: ("data/test/array_types.ts", "data/test/expected_array_types.proto"),
+        test_handle_map_types: ("data/test/map_types.ts", "data/test/expected_map_types.proto"),
     }
 }

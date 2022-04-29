@@ -1,0 +1,3 @@
+message SimpleHashMap {
+  map<string, int32> key = 0;
+}

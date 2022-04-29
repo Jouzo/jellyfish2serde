@@ -12,30 +12,37 @@ enum TypescriptKeywordType {
 }
 // struct to hold the properties of an interface
 struct TypescriptProperty {
-    name: String,
+    name: Option<String>,
     value: TypescriptKeywordType,
 }
 
 // basic types
 impl TypescriptProperty {
-    pub fn new(name: String, value: TsKeywordTypeKind) -> Self {
-        let mut val = TypescriptKeywordType::STRING;
+    pub fn keyword_type(value: TsKeywordTypeKind) -> TypescriptKeywordType {
         match value {
-            TsKeywordTypeKind::TsNumberKeyword => val = TypescriptKeywordType::NUMBER,
-            TsKeywordTypeKind::TsBooleanKeyword => val = TypescriptKeywordType::BOOLEAN,
-            TsKeywordTypeKind::TsStringKeyword => val = TypescriptKeywordType::STRING,
+            TsKeywordTypeKind::TsNumberKeyword => TypescriptKeywordType::NUMBER,
+            TsKeywordTypeKind::TsBooleanKeyword => TypescriptKeywordType::BOOLEAN,
+            TsKeywordTypeKind::TsStringKeyword => TypescriptKeywordType::STRING,
             _ => unreachable!("unhandled TypescriptProperty"),
-        };
-        TypescriptProperty { name, value: val }
+        }
+    }
+    pub fn new(name: Option<String>, value: TsKeywordTypeKind) -> Self {
+        let value = TypescriptProperty::keyword_type(value);
+        TypescriptProperty { name, value }
     }
 }
 
 impl Property for TypescriptProperty {
     fn to_string(&self) -> String {
-        match &self.value {
-            TypescriptKeywordType::NUMBER => format!("int32 {}", self.name),
-            TypescriptKeywordType::BOOLEAN => format!("bool {}", self.name),
-            TypescriptKeywordType::STRING => format!("string {}", self.name),
+        let mut keyword = match &self.value {
+            TypescriptKeywordType::NUMBER => String::from("int32"),
+            TypescriptKeywordType::BOOLEAN => String::from("bool"),
+            TypescriptKeywordType::STRING => String::from("string"),
+        };
+        if let Some(name) = &self.name {
+            format!("{} {}", keyword, name)
+        } else {
+            format!("{}", keyword)
         }
     }
 }
@@ -46,7 +53,7 @@ struct TypescriptArrayProperty {
 }
 
 impl TypescriptArrayProperty {
-    pub fn new(name: String, value: TsKeywordTypeKind) -> Self {
+    pub fn new(name: Option<String>, value: TsKeywordTypeKind) -> Self {
         TypescriptArrayProperty {
             property: TypescriptProperty::new(name, value),
         }
@@ -59,7 +66,7 @@ impl Property for TypescriptArrayProperty {
     }
 }
 
-pub fn ts_type_factory(name: String, ts_type: TsType) -> Box<(dyn Property + 'static)> {
+pub fn ts_type_factory(name: Option<String>, ts_type: TsType) -> Box<(dyn Property + 'static)> {
     match ts_type {
         TsType::TsKeywordType(keyword) => Box::new(TypescriptProperty::new(name, keyword.kind)),
         TsType::TsArrayType(TsArrayType {
@@ -69,25 +76,7 @@ pub fn ts_type_factory(name: String, ts_type: TsType) -> Box<(dyn Property + 'st
         _ => unreachable!("unhandled ts_keyword_type for ts_type_factory"),
     }
 }
-
-// hash type
-// struct TypescriptMapProperty {
-//     key: TypescriptProperty,
-//     value: Box<dyn Property>,
-// }
-// impl TypescriptMapProperty {
-//     pub fn new(name: String, ts_type_key: TsKeywordTypeKind, ts_type_value: TsType) -> Self {
-//         TypescriptMapProperty {
-//             key: TypescriptProperty::new(String::from(""), ts_type_key),
-//             value: ts_type_factory(String::from(""), ts_type_value),
-//         }
-//     }
-// }
-// impl Property for TypescriptMapProperty {
-//     fn to_string(&self) -> String {
-//
-//     }
-// }
+// interfaces
 struct TypescriptInterface {
     name: String,
     properties: Vec<Box<dyn Property>>,
@@ -118,16 +107,76 @@ impl Interface for TypescriptInterface {
     }
 }
 
-pub fn interface_factory(ts_interface: TsInterfaceDecl) {}
-pub fn handle_interface(ts_interface: TsInterfaceDecl) -> Box<(dyn Interface + 'static)> {
-    let mut properties: Vec<Box<dyn Property>> = vec![];
-    for property in ts_interface.body.body {
-        match property {
+// Map Interface
+struct TypescriptMapInterface {
+    name: String,
+    keyword_name: String,
+    keyword_type: TypescriptProperty,
+    value_type: Box<dyn Property>,
+}
+
+impl TypescriptMapInterface {
+    pub fn new(
+        name: String,
+        keyword_name: String,
+        keyword_kind: TsKeywordTypeKind,
+        type_ann: TsType,
+    ) -> Self {
+        let keyword_type = TypescriptProperty::new(None, keyword_kind);
+        let value_type = ts_type_factory(None, type_ann);
+        TypescriptMapInterface {
+            name,
+            keyword_name,
+            keyword_type,
+            value_type,
+        }
+    }
+}
+
+impl Interface for TypescriptMapInterface {
+    fn to_string(&self) -> String {
+        let mut output = format!("message {} {{\n", self.name);
+        output.push_str(
+            format!(
+                "  map<{}, {}> {} = 0;\n",
+                self.keyword_type.to_string(),
+                self.value_type.as_ref().to_string(),
+                self.keyword_name
+            )
+            .as_str(),
+        );
+        output.push_str("}\n");
+        output
+    }
+}
+enum TsInterfacePropertyTypes {
+    TsProperty {
+        interface_id: String,
+        type_ann: TsType,
+    },
+    TsIndexProperty {
+        interface_id: String,
+        keyword_id: String,
+        keyword_kind: TsKeywordTypeKind,
+        type_ann: TsType,
+    },
+}
+impl TsInterfacePropertyTypes {
+    fn extract_interface_params(
+        element: TsTypeElement,
+        ts_interface: TsInterfaceDecl,
+    ) -> TsInterfacePropertyTypes {
+        match element {
             TsTypeElement::TsPropertySignature(TsPropertySignature {
                 key: box Expr::Ident(id),
                 type_ann: Some(TsTypeAnn { box type_ann, .. }),
                 ..
-            }) => properties.push(ts_type_factory(id.sym.to_string(), type_ann)),
+            }) => {
+                return TsInterfacePropertyTypes::TsProperty {
+                    interface_id: id.sym.to_string(),
+                    type_ann,
+                }
+            }
             TsTypeElement::TsIndexSignature(TsIndexSignature {
                 params,
                 type_ann: Some(TsTypeAnn { box type_ann, .. }),
@@ -139,11 +188,45 @@ pub fn handle_interface(ts_interface: TsInterfaceDecl) -> Box<(dyn Interface + '
                             type_ann: box TsType::TsKeywordType(keyword),
                             ..
                         }),
-                    ..
+                    id,
                 })) = params.get(0)
-                // TODO: Handle this !
-                {}
+                {
+                    return TsInterfacePropertyTypes::TsIndexProperty {
+                        interface_id: ts_interface.id.sym.to_string(),
+                        keyword_id: id.sym.to_string(),
+                        keyword_kind: keyword.kind,
+                        type_ann,
+                    };
+                } else {
+                    unreachable!("unhandled section for TsIndexSignature")
+                }
             }
+            _ => unreachable!("unhandled TsTypeElement at interface factory"),
+        }
+    }
+}
+pub fn handle_interface(ts_interface: TsInterfaceDecl) -> Box<(dyn Interface + 'static)> {
+    let mut properties: Vec<Box<dyn Property>> = vec![];
+    for property in ts_interface.body.body {
+        match TsInterfacePropertyTypes::extract_interface_params(property, ts_interface) {
+            TsInterfacePropertyTypes::TsProperty {
+                interface_id,
+                type_ann,
+            } => properties.push(ts_type_factory(Some(interface_id), type_ann)),
+            TsInterfacePropertyTypes::TsIndexProperty {
+                interface_id,
+                keyword_id,
+                keyword_kind,
+                type_ann,
+            } => {
+                return Box::new(TypescriptMapInterface::new(
+                    interface_id,
+                    keyword_id,
+                    keyword_kind,
+                    type_ann,
+                ));
+            }
+
             _ => unreachable!("unhandled TsTypeElement at interface factory"),
         }
     }
