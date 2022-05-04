@@ -6,7 +6,9 @@ mod interface;
 mod transpilers;
 mod utils;
 
-use transpilers::{generate_ast_structure, transpiler_factory};
+use crate::transpilers::{
+    common::Transpiler, generate_ast_structure, proto::transpiler::ProtoTranspiler,
+};
 
 fn main() -> Result<(), ()> {
     // grab argument and fail if there is no more arguments
@@ -15,7 +17,9 @@ fn main() -> Result<(), ()> {
     let transpile_type = &args[2];
 
     let ast_module = generate_ast_structure(input_file);
-    //let transpiled_code = transpiler_factory(ast_module, transpile_type.to_string()).transpile();
+    let transpiler = ProtoTranspiler::new(ast_module);
+    let output = transpiler.transpile().join("\n");
+    println!("{}", output);
 
     Ok(())
 }
