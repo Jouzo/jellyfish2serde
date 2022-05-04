@@ -1,4 +1,5 @@
 use crate::transpilers::common::interface::{Interface, Property};
+use convert_case::{Case, Casing};
 use swc_ecma_ast::{
     BindingIdent, Expr, TsArrayType, TsEntityName, TsFnParam, TsIndexSignature, TsInterfaceDecl,
     TsKeywordType, TsKeywordTypeKind, TsPropertySignature, TsType, TsTypeAnn, TsTypeElement,
@@ -35,13 +36,13 @@ impl TypescriptProperty {
 
 impl Property for TypescriptProperty {
     fn to_string(&self) -> String {
-        let mut keyword = match &self.value {
+        let keyword = match &self.value {
             TypescriptKeywordType::NUMBER => String::from("int32"),
             TypescriptKeywordType::BOOLEAN => String::from("bool"),
             TypescriptKeywordType::STRING => String::from("string"),
         };
         if let Some(name) = &self.name {
-            format!("{} {}", keyword, name)
+            format!("{} {}", keyword, name.to_case(Case::Snake))
         } else {
             format!("{}", keyword)
         }
@@ -78,15 +79,24 @@ struct TypescriptCustomProperty {
 }
 
 impl TypescriptCustomProperty {
+    fn custom_type_map(custom_type: String) -> String {
+        match custom_type.as_str() {
+            "BigNumber" => String::from("int64"),
+            _ => custom_type,
+        }
+    }
     pub fn new(name: Option<String>, custom_type: String) -> Self {
-        Self { name, custom_type }
+        Self {
+            name,
+            custom_type: Self::custom_type_map(custom_type),
+        }
     }
 }
 
 impl Property for TypescriptCustomProperty {
     fn to_string(&self) -> String {
         if let Some(name) = &self.name {
-            format!("{} {}", self.custom_type, name)
+            format!("{} {}", self.custom_type, name.to_case(Case::Snake))
         } else {
             format!("{}", self.custom_type)
         }
@@ -107,12 +117,28 @@ pub fn ts_type_factory(name: Option<String>, ts_type: TsType) -> Box<(dyn Proper
                 }),
             ..
         }) => Box::new(TypescriptArrayProperty::new_custom(
-            TypescriptCustomProperty::new(name, id.to_string()),
+            TypescriptCustomProperty::new(
+                name,
+                id.to_string()
+                    .as_str()
+                    .split("#")
+                    .next()
+                    .unwrap()
+                    .to_string(),
+            ),
         )),
         TsType::TsTypeRef(TsTypeRef {
             type_name: TsEntityName::Ident(id),
             ..
-        }) => Box::new(TypescriptCustomProperty::new(name, id.to_string())),
+        }) => Box::new(TypescriptCustomProperty::new(
+            name,
+            id.to_string()
+                .as_str()
+                .split("#")
+                .next()
+                .unwrap()
+                .to_string(),
+        )),
         _ => unreachable!(
             "unhandled ts_keyword_type for ts_type_factory {:?}",
             ts_type
