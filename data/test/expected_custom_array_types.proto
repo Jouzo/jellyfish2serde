@@ -1,0 +1,6 @@
+message VaultLiquidation {
+  int32 liquidationHeight = 1;
+  int32 liquidationPenalty = 2;
+  int32 batchCount = 3;
+  repeated VaultLiquidationBatch batches = 4;
+}
