@@ -57,7 +57,7 @@ mod test_handle_interface {
                     let expected_result = load_test_expected_results(test_expected_result)?;
                     let pt = ProtoTranspiler::new(test_module);
                     let output_code = pt.transpile().join("\n");
-                    assert_eq!(output_code, expected_result);
+                    assert_eq!(output_code.clone().retain(|c| !c.is_whitespace()), expected_result.clone().retain(|c| !c.is_whitespace()));
                     Ok(())
                 }
             )*
@@ -67,5 +67,6 @@ mod test_handle_interface {
         test_handle_basic_types: ("data/test/basic_types.ts", "data/test/expected_basic_types.proto"),
         test_handle_array_types: ("data/test/array_types.ts", "data/test/expected_array_types.proto"),
         test_handle_map_types: ("data/test/map_types.ts", "data/test/expected_map_types.proto"),
+        test_handle_nested_types: ("data/test/nested_types.ts", "data/test/expected_nested_types.proto"),
     }
 }

@@ -1,0 +1,15 @@
+message AddressInfo {
+  message embedded {
+      string address = 0;
+      string scriptPubKey = 1;
+      bool isscript = 2;
+      bool iswitness = 3;
+      int32 witness_version = 4;
+      string witness_program = 5;
+      ScriptType script = 6;
+      string hex = 7;
+      int32 sigsrequired = 8;
+      string pubkey = 9;
+      repeated string pubkeys = 10;
+    }
+}

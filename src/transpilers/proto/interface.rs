@@ -1,7 +1,8 @@
 use crate::transpilers::common::interface::{Interface, Property};
 use swc_ecma_ast::{
-    BindingIdent, Expr, TsArrayType, TsFnParam, TsIndexSignature, TsInterfaceDecl, TsKeywordType,
-    TsKeywordTypeKind, TsPropertySignature, TsType, TsTypeAnn, TsTypeElement,
+    BindingIdent, Expr, TsArrayType, TsEntityName, TsFnParam, TsIndexSignature, TsInterfaceDecl,
+    TsKeywordType, TsKeywordTypeKind, TsPropertySignature, TsType, TsTypeAnn, TsTypeElement,
+    TsTypeLit, TsTypeRef,
 };
 
 // all the basic typescript types
@@ -65,7 +66,27 @@ impl Property for TypescriptArrayProperty {
         format!("repeated {}", self.property.to_string())
     }
 }
+// custom type
+struct TypescriptCustomProperty {
+    name: Option<String>,
+    custom_type: String,
+}
 
+impl TypescriptCustomProperty {
+    pub fn new(name: Option<String>, custom_type: String) -> Self {
+        Self { name, custom_type }
+    }
+}
+
+impl Property for TypescriptCustomProperty {
+    fn to_string(&self) -> String {
+        if let Some(name) = &self.name {
+            format!("{} {}", self.custom_type, name)
+        } else {
+            format!("{}", self.custom_type)
+        }
+    }
+}
 pub fn ts_type_factory(name: Option<String>, ts_type: TsType) -> Box<(dyn Property + 'static)> {
     match ts_type {
         TsType::TsKeywordType(keyword) => Box::new(TypescriptProperty::new(name, keyword.kind)),
@@ -73,7 +94,14 @@ pub fn ts_type_factory(name: Option<String>, ts_type: TsType) -> Box<(dyn Proper
             elem_type: box TsType::TsKeywordType(TsKeywordType { kind, .. }),
             ..
         }) => Box::new(TypescriptArrayProperty::new(name, kind)),
-        _ => unreachable!("unhandled ts_keyword_type for ts_type_factory"),
+        TsType::TsTypeRef(TsTypeRef {
+            type_name: TsEntityName::Ident(id),
+            ..
+        }) => Box::new(TypescriptCustomProperty::new(name, id.to_string())),
+        _ => unreachable!(
+            "unhandled ts_keyword_type for ts_type_factory {:?}",
+            ts_type
+        ),
     }
 }
 // interfaces
@@ -85,11 +113,28 @@ struct TypescriptInterface {
 
 impl TypescriptInterface {
     pub fn new(n: String, p: Vec<Box<dyn Property>>, g: Option<Vec<String>>) -> Self {
-        TypescriptInterface {
+        Self {
             name: n,
             properties: p,
             generics: g,
         }
+    }
+    pub fn from_interface_body(
+        interface_id: String,
+        interface_body_items: Vec<TsTypeElement>,
+    ) -> Self {
+        let mut properties: Vec<Box<dyn Property>> = vec![];
+        for property in interface_body_items {
+            if let TsTypeElement::TsPropertySignature(TsPropertySignature {
+                key: box Expr::Ident(id),
+                type_ann: Some(TsTypeAnn { box type_ann, .. }),
+                ..
+            }) = property
+            {
+                properties.push(ts_type_factory(Some(id.sym.to_string()), type_ann))
+            }
+        }
+        Self::new(interface_id, properties, None)
     }
 }
 
@@ -124,7 +169,7 @@ impl TypescriptMapInterface {
     ) -> Self {
         let keyword_type = TypescriptProperty::new(None, keyword_kind);
         let value_type = ts_type_factory(None, type_ann);
-        TypescriptMapInterface {
+        Self {
             name,
             keyword_name,
             keyword_type,
@@ -149,6 +194,34 @@ impl Interface for TypescriptMapInterface {
         output
     }
 }
+
+// Nested Interface
+struct TypescriptNestedInterface {
+    name: String,
+    value: TypescriptInterface,
+}
+
+impl TypescriptNestedInterface {
+    pub fn new(
+        interface_id: String,
+        sub_interface_id: String,
+        properties: Vec<TsTypeElement>,
+    ) -> Self {
+        let interface = TypescriptInterface::from_interface_body(sub_interface_id, properties);
+        Self {
+            name: interface_id,
+            value: interface,
+        }
+    }
+}
+impl Interface for TypescriptNestedInterface {
+    fn to_string(&self) -> String {
+        let mut output = format!("message {} {{\n", self.name);
+        output.push_str(self.value.to_string().as_str());
+        output.push_str("}\n");
+        output
+    }
+}
 enum TsInterfacePropertyTypes {
     TsProperty {
         interface_id: String,
@@ -160,11 +233,17 @@ enum TsInterfacePropertyTypes {
         keyword_kind: TsKeywordTypeKind,
         type_ann: TsType,
     },
+    TsNestedProperty {
+        interface_id: String,
+        sub_interface_id: String,
+        properties: Vec<TsTypeElement>,
+    },
+    TsUnionType,
 }
 impl TsInterfacePropertyTypes {
     fn extract_interface_params(
         element: TsTypeElement,
-        ts_interface: TsInterfaceDecl,
+        ts_interface_id: String,
     ) -> TsInterfacePropertyTypes {
         match element {
             TsTypeElement::TsPropertySignature(TsPropertySignature {
@@ -172,9 +251,17 @@ impl TsInterfacePropertyTypes {
                 type_ann: Some(TsTypeAnn { box type_ann, .. }),
                 ..
             }) => {
-                return TsInterfacePropertyTypes::TsProperty {
-                    interface_id: id.sym.to_string(),
-                    type_ann,
+                if let TsType::TsTypeLit(TsTypeLit { members, .. }, ..) = type_ann {
+                    return TsInterfacePropertyTypes::TsNestedProperty {
+                        interface_id: ts_interface_id,
+                        sub_interface_id: id.sym.to_string(),
+                        properties: members,
+                    };
+                } else {
+                    return TsInterfacePropertyTypes::TsProperty {
+                        interface_id: id.sym.to_string(),
+                        type_ann,
+                    };
                 }
             }
             TsTypeElement::TsIndexSignature(TsIndexSignature {
@@ -192,7 +279,7 @@ impl TsInterfacePropertyTypes {
                 })) = params.get(0)
                 {
                     return TsInterfacePropertyTypes::TsIndexProperty {
-                        interface_id: ts_interface.id.sym.to_string(),
+                        interface_id: ts_interface_id,
                         keyword_id: id.sym.to_string(),
                         keyword_kind: keyword.kind,
                         type_ann,
@@ -205,34 +292,51 @@ impl TsInterfacePropertyTypes {
         }
     }
 }
-pub fn handle_interface(ts_interface: TsInterfaceDecl) -> Box<(dyn Interface + 'static)> {
-    let mut properties: Vec<Box<dyn Property>> = vec![];
-    for property in ts_interface.body.body {
-        match TsInterfacePropertyTypes::extract_interface_params(property, ts_interface) {
-            TsInterfacePropertyTypes::TsProperty {
-                interface_id,
-                type_ann,
-            } => properties.push(ts_type_factory(Some(interface_id), type_ann)),
-            TsInterfacePropertyTypes::TsIndexProperty {
+fn interface_factory(
+    property: TsTypeElement,
+    ts_interface_id: String,
+) -> Box<(dyn Interface + 'static)> {
+    match TsInterfacePropertyTypes::extract_interface_params(property, ts_interface_id) {
+        TsInterfacePropertyTypes::TsIndexProperty {
+            interface_id,
+            keyword_id,
+            keyword_kind,
+            type_ann,
+        } => {
+            return Box::new(TypescriptMapInterface::new(
                 interface_id,
                 keyword_id,
                 keyword_kind,
                 type_ann,
-            } => {
-                return Box::new(TypescriptMapInterface::new(
-                    interface_id,
-                    keyword_id,
-                    keyword_kind,
-                    type_ann,
-                ));
-            }
-
-            _ => unreachable!("unhandled TsTypeElement at interface factory"),
+            ));
         }
+        TsInterfacePropertyTypes::TsNestedProperty {
+            interface_id,
+            sub_interface_id,
+            properties,
+        } => {
+            return Box::new(TypescriptNestedInterface::new(
+                interface_id,
+                sub_interface_id,
+                properties,
+            ))
+        }
+
+        _ => unreachable!("unhandled TsTypeElement at interface factory"),
     }
-    Box::new(TypescriptInterface::new(
-        ts_interface.id.sym.to_string(),
-        properties,
-        None,
-    ))
+}
+
+pub fn handle_interface(ts_interface: TsInterfaceDecl) -> Box<(dyn Interface + 'static)> {
+    let ts_interface_body = ts_interface.clone().body.body;
+    // assuming if a interface body has more than 1 item, its a normal interface
+    if ts_interface_body.len() > 1 {
+        Box::new(TypescriptInterface::from_interface_body(
+            ts_interface.id.sym.to_string(),
+            ts_interface_body,
+        ))
+    // if a interface body has only 1 item its one of the special cases
+    } else {
+        let property = ts_interface_body[0].clone();
+        interface_factory(property, ts_interface.id.sym.to_string())
+    }
 }
