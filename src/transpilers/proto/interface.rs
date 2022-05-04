@@ -50,13 +50,18 @@ impl Property for TypescriptProperty {
 
 // array type
 struct TypescriptArrayProperty {
-    property: TypescriptProperty,
+    property: Box<dyn Property>,
 }
 
 impl TypescriptArrayProperty {
     pub fn new(name: Option<String>, value: TsKeywordTypeKind) -> Self {
         TypescriptArrayProperty {
-            property: TypescriptProperty::new(name, value),
+            property: Box::new(TypescriptProperty::new(name, value)),
+        }
+    }
+    pub fn new_custom(value: TypescriptCustomProperty) -> Self {
+        TypescriptArrayProperty {
+            property: Box::new(value),
         }
     }
 }
@@ -94,6 +99,16 @@ pub fn ts_type_factory(name: Option<String>, ts_type: TsType) -> Box<(dyn Proper
             elem_type: box TsType::TsKeywordType(TsKeywordType { kind, .. }),
             ..
         }) => Box::new(TypescriptArrayProperty::new(name, kind)),
+        TsType::TsArrayType(TsArrayType {
+            elem_type:
+                box TsType::TsTypeRef(TsTypeRef {
+                    type_name: TsEntityName::Ident(id),
+                    ..
+                }),
+            ..
+        }) => Box::new(TypescriptArrayProperty::new_custom(
+            TypescriptCustomProperty::new(name, id.to_string()),
+        )),
         TsType::TsTypeRef(TsTypeRef {
             type_name: TsEntityName::Ident(id),
             ..

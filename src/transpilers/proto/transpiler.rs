@@ -68,5 +68,6 @@ mod test_handle_interface {
         test_handle_array_types: ("data/test/array_types.ts", "data/test/expected_array_types.proto"),
         test_handle_map_types: ("data/test/map_types.ts", "data/test/expected_map_types.proto"),
         test_handle_nested_types: ("data/test/nested_types.ts", "data/test/expected_nested_types.proto"),
+        test_handle_custom_array_types: ("data/test/custom_array_types.ts", "data/test/expected_custom_array_types.proto"),
     }
 }
