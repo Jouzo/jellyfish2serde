@@ -1,0 +1,3 @@
+message MempoolTx {
+  map <string, int64> key = 1;
+}

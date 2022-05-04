@@ -217,6 +217,30 @@ impl TypescriptMapInterface {
             value_type,
         }
     }
+    pub fn new_custom(
+        name: String,
+        keyword_name: String,
+        keyword_kind: TsKeywordTypeKind,
+        type_ann: TsTypeElement,
+    ) -> Self {
+        if let TsTypeElement::TsPropertySignature(TsPropertySignature {
+            key: box Expr::Ident(id),
+            type_ann: Some(TsTypeAnn { box type_ann, .. }),
+            ..
+        }) = type_ann
+        {
+            let keyword_type = TypescriptProperty::new(None, keyword_kind);
+            let value_type = ts_type_factory(None, type_ann);
+            Self {
+                name,
+                keyword_name,
+                keyword_type,
+                value_type,
+            }
+        } else {
+            unreachable!("unhandled Map Interface new_custom constructor")
+        }
+    }
 }
 
 impl Interface for TypescriptMapInterface {
@@ -274,12 +298,17 @@ enum TsInterfacePropertyTypes {
         keyword_kind: TsKeywordTypeKind,
         type_ann: TsType,
     },
+    TsIndexCustomPorperty {
+        interface_id: String,
+        keyword_id: String,
+        keyword_kind: TsKeywordTypeKind,
+        type_ann: TsTypeElement,
+    },
     TsNestedProperty {
         interface_id: String,
         sub_interface_id: String,
         properties: Vec<TsTypeElement>,
     },
-    TsUnionType,
 }
 impl TsInterfacePropertyTypes {
     fn extract_interface_params(
@@ -306,31 +335,50 @@ impl TsInterfacePropertyTypes {
                 }
             }
             TsTypeElement::TsIndexSignature(TsIndexSignature {
-                params,
-                type_ann: Some(TsTypeAnn { box type_ann, .. }),
-                ..
+                params, type_ann, ..
             }) => {
-                if let Some(TsFnParam::Ident(BindingIdent {
-                    type_ann:
-                        Some(TsTypeAnn {
-                            type_ann: box TsType::TsKeywordType(keyword),
-                            ..
-                        }),
-                    id,
-                })) = params.get(0)
+                let (keyword_id, keyword_kind) = extract_map_key_data(params.get(0)).unwrap();
+                if let Some(TsTypeAnn {
+                    type_ann: box TsType::TsTypeLit(TsTypeLit { members, .. }),
+                    ..
+                }) = type_ann
                 {
+                    // map with custom key type
+                    return TsInterfacePropertyTypes::TsIndexCustomPorperty {
+                        interface_id: ts_interface_id,
+                        keyword_id,
+                        keyword_kind,
+                        type_ann: members[0].clone(),
+                    };
+                } else if let Some(TsTypeAnn { type_ann, .. }) = type_ann {
                     return TsInterfacePropertyTypes::TsIndexProperty {
                         interface_id: ts_interface_id,
-                        keyword_id: id.sym.to_string(),
-                        keyword_kind: keyword.kind,
-                        type_ann,
+                        keyword_id,
+                        keyword_kind,
+                        type_ann: type_ann.as_ref().to_owned(),
                     };
                 } else {
-                    unreachable!("unhandled section for TsIndexSignature")
+                    unreachable!("unhandled Map Implementation")
                 }
             }
             _ => unreachable!("unhandled TsTypeElement at interface factory"),
         }
+    }
+}
+
+fn extract_map_key_data(param: Option<&TsFnParam>) -> Option<(String, TsKeywordTypeKind)> {
+    if let Some(TsFnParam::Ident(BindingIdent {
+        type_ann:
+            Some(TsTypeAnn {
+                type_ann: box TsType::TsKeywordType(keyword),
+                ..
+            }),
+        id,
+    })) = param
+    {
+        Some((id.sym.to_string(), keyword.kind))
+    } else {
+        None
     }
 }
 fn interface_factory(
@@ -350,6 +398,19 @@ fn interface_factory(
                 keyword_kind,
                 type_ann,
             ));
+        }
+        TsInterfacePropertyTypes::TsIndexCustomPorperty {
+            interface_id,
+            keyword_id,
+            keyword_kind,
+            type_ann,
+        } => {
+            return Box::new(TypescriptMapInterface::new_custom(
+                interface_id,
+                keyword_id,
+                keyword_kind,
+                type_ann,
+            ))
         }
         TsInterfacePropertyTypes::TsNestedProperty {
             interface_id,
